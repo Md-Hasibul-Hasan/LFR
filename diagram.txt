@@ -1,0 +1,92 @@
+===========================================================
+              Arduino Nano PIN CONNECTION DIAGRAM
+===========================================================
+
+---------------------------
+POWER HEADER
+---------------------------
+D13  -> Onboard LED
+
+3.3V -> NC
+REF  -> NC
+
+A0   -> MUX SIG
+A1   -> UP Button
+A2   -> DOWN Button
+A3   -> OK Button
+A4   -> OLED SDA
+A5   -> OLED SCL
+A6   -> NC
+A7   -> NC
+
+5V   -> VCC
+RST  -> NC
+GND  -> Common GND
+
+VIN  -> MUX STBY
+
+---------------------------
+DIGITAL HEADER
+---------------------------
+D12  -> TB6612 BIN2
+D11  -> NC
+D10  -> TB6612 PWMB
+D9   -> TB6612 PWMA
+D8   -> TB6612 BIN1
+D7   -> TB6612 AIN2
+D6   -> TB6612 AIN1
+D5   -> MUX S3
+D4   -> MUX S2
+D3   -> MUX S1
+D2   -> MUX S0
+
+GND  -> MUX EN
+RST  -> NC
+RX0  -> Serial RX
+TX1  -> Serial TX
+
+===========================================================
+MODULE CONNECTIONS
+===========================================================
+
+OLED (SSD1306)
+--------------
+VCC -> 5V
+GND -> GND
+SDA -> A4
+SCL -> A5
+
+MUX (CD74HC4067)
+----------------
+SIG  -> A0
+S0   -> D2
+S1   -> D3
+S2   -> D4
+S3   -> D5
+EN   -> GND
+STBY -> VCC
+
+Buttons
+-------
+UP    -> A1
+DOWN  -> A2
+OK    -> A3
+
+Motor Driver (TB6612FNG)
+------------------------
+AIN1 -> D6
+AIN2 -> D7
+BIN1 -> D8
+PWMA -> D9
+PWMB -> D10
+BIN2 -> D12
+
+===========================================================
+NC (Unused)
+===========================================================
+3.3V
+AREF
+A6
+A7
+D11
+RST
