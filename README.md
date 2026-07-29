@@ -1,6 +1,6 @@
 # PID Line Follower Robot
 
-A professional Arduino Uno based PID Line Follower Robot featuring an interactive OLED dashboard, sensor calibration, EEPROM persistence, motor testing, and real-time PID tuning.
+A professional Arduino Nano based PID Line Follower Robot featuring an interactive OLED dashboard, sensor calibration, EEPROM persistence, motor testing, and real-time PID tuning.
 
 ---
 
@@ -24,7 +24,7 @@ A professional Arduino Uno based PID Line Follower Robot featuring an interactiv
 
 | Component | Quantity |
 |-----------|---------:|
-| Arduino Uno | 1 |
+| Arduino Nano | 1 |
 | TB6612FNG Motor Driver | 1 |
 | SSD1306 OLED (I2C) | 1 |
 | CD74HC4067 16-Channel Multiplexer | 1 |
