@@ -94,15 +94,15 @@ A professional Arduino Nano based PID Line Follower Robot featuring an interacti
 ```
 PID/
 │
-├── PID.ino                # Main Program
+├── LFR_V4.ino             # Main Program
 ├── Globals.h              # Global Variables
-├── Robot.ino              # Robot Control
+├── Line_Follow.ino        # Robot Control
 ├── Motor.ino              # Motor Driver
-├── Sensor.ino             # Sensor Processing
-├── Pidd.ino               # PID Controller
+├── Functions.ino          # Sensor Processing
+├── PID.ino                # PID Controller
 ├── EEPROM.ino             # Save & Load Settings
 ├── Oled.ino               # Dashboard & UI
-├── Sensor_View.ino        # Sensor Monitor
+├── Live_Sensor.ino        # Sensor Monitor
 ├── Motor_Test.ino         # Motor Testing
 ├── Button.h               # Button Library
 ```
@@ -242,10 +242,6 @@ Resets:
 - SD card logging
 
 ---
-
-# License
-
-This project is released under the MIT License.
 
 ---
 
