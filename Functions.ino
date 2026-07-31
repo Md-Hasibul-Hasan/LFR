@@ -6,13 +6,13 @@ int maxValue[SENSOR_COUNT];
 
 int rawValue[SENSOR_COUNT];
 int norValue[SENSOR_COUNT];
-bool inverseTrack = false;
-
+bool inverseTrack = false; // false= black line, true= white line
 
 
 const int weight[SENSOR_COUNT] = { -350, -250, -150, -50, 50, 150 , 250, 350};
 const int CENTER = 0;
 int lastPosition = 0;
+int totalNorValue = 0;
 
 int position = 0;
 int error = 0;
@@ -27,24 +27,6 @@ int ReadMuxChannel(int channel){
 }
 
 
-// void Calibration(){
-
-//   for(int i=0; i<SENSOR_COUNT; i++){
-//     minValue[i]=1023;
-//     maxValue[i]=0;
-//   }
-
-//   unsigned long startTime = millis();
-//   while(millis() - startTime < 5000){
-
-//     for(int i=0; i<SENSOR_COUNT; i++){
-//       int val = ReadMuxChannel(i);
-//       if(val<minValue[i]) minValue[i]=val;
-//       if(val>maxValue[i]) maxValue[i]=val;
-//     }
-
-//   }
-// }
 
 void Calibration(){
     while (true){
@@ -141,28 +123,45 @@ void Calibration(){
 
 
 
+void DetectTrack()
+{
+    int edgeAvg = (rawValue[0] + rawValue[1] + rawValue[6] + rawValue[7]) / 4;
+    int centerAvg = (rawValue[3] + rawValue[4]) / 2;
 
+    if (abs(centerAvg - edgeAvg) < 150)
+        return;   // নিশ্চিত না, কিছু করো না
+
+    inverseTrack = (centerAvg > edgeAvg);
+}
 
 void ReadSensors(){
+    
+    // sensor read করো
     for (int i = 0; i < SENSOR_COUNT; i++){
-        // Read Raw Value
         rawValue[i] = ReadMuxChannel(i);
+    }
 
+
+    // normalize করো
+    for (int i = 0; i < SENSOR_COUNT; i++){
         int range = maxValue[i] - minValue[i];
 
-        if(range == 0){
-          norValue[i] = 0;
-        } else{
-          norValue[i] = (rawValue[i] - minValue[i]) * 1000 / range;
+        if (range == 0){
+            norValue[i] = 0;
+            continue;
         }
 
-        // Normalize (0 - 1000)
+        if (inverseTrack)
+            norValue[i] = (rawValue[i] - minValue[i]) * 1000 / range;
+        else
+            norValue[i] = (maxValue[i] - rawValue[i]) * 1000 / range;
+
         norValue[i] = constrain(norValue[i], 0, 1000);
-        if(inverseTrack) norValue[i] = 1000 - norValue[i];
     }
 
     position = CalculatePosition();
     error = CalculateError(position);
+
 }
 
 
@@ -176,6 +175,7 @@ int CalculatePosition(){
         total += norValue[i];
     }
 
+    totalNorValue = total;
     if (total == 0) return lastPosition;
 
     lastPosition = weightedSum / total;
@@ -188,4 +188,46 @@ int CalculatePosition(){
 int CalculateError(int position){
   int error = position - CENTER;
   return error;
+}
+
+bool IsLineLost()
+{
+    return totalNorValue < 300;
+}
+
+// bool IsLineLost()
+// {
+//     return activeSensorCount == 0;
+// }
+
+
+bool IsJunction()
+{
+    bool left   = norValue[0] > 500 && norValue[1] > 500;
+    bool center = norValue[3] > 500 && norValue[4] > 500;
+    bool right  = norValue[6] > 500 && norValue[7] > 500;
+
+    return left && center && right;
+}
+
+
+
+bool IsHardLeft()
+{
+    bool left = norValue[0] > 500 && norValue[1] > 500 && norValue[2] > 500;
+    bool right = norValue[6] > 500 && norValue[7] > 500;
+    return left && !right;
+}
+
+bool IsHardRight()
+{
+    bool left = norValue[0] > 500 && norValue[1] > 500 && norValue[2] > 500;
+    bool right = norValue[6] > 500 && norValue[7] > 500;
+    return !left && right;
+}
+
+bool IsRoundabout()
+{
+    // পরে implement করবে
+    return false;
 }

@@ -1,0 +1,47 @@
+// void Calibration(){
+
+//   for(int i=0; i<SENSOR_COUNT; i++){
+//     minValue[i]=1023;
+//     maxValue[i]=0;
+//   }
+
+//   unsigned long startTime = millis();
+//   while(millis() - startTime < 5000){
+
+//     for(int i=0; i<SENSOR_COUNT; i++){
+//       int val = ReadMuxChannel(i);
+//       if(val<minValue[i]) minValue[i]=val;
+//       if(val>maxValue[i]) maxValue[i]=val;
+//     }
+
+//   }
+// }
+
+
+// void ReadSensors(){
+
+//     for (int i = 0; i < SENSOR_COUNT; i++){
+//         // Read Raw Value
+//         rawValue[i] = ReadMuxChannel(i);
+
+//         int range = maxValue[i] - minValue[i];
+
+//         if(range == 0){
+//           norValue[i] = 0;
+//         } else{
+//             if(inverseTrack){
+//               norValue[i] = (rawValue[i] - minValue[i]) * 1000 / range; // Black ↑ White ↓
+//             }else{
+//               norValue[i] = (maxValue[i] - rawValue[i]) * 1000 / range; // White ↑ Black ↓
+//             }
+
+//         }
+
+//         // Normalize (0 - 1000)
+//         norValue[i] = constrain(norValue[i], 0, 1000);
+//         // if(inverseTrack) norValue[i] = 1000 - norValue[i];
+//     }
+
+//     position = CalculatePosition();
+//     error = CalculateError(position);
+// }

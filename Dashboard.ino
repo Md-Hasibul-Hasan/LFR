@@ -5,9 +5,9 @@
 
 U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
-Button up(A1);
-Button down(A2);
-Button ok(A3);
+Button up(A2); 
+Button down(A3);
+Button ok(A1);
 
 Button::Event upEvent;
 Button::Event downEvent;
@@ -46,7 +46,7 @@ struct DashboardItem
 DashboardItem dashboard[] =
 {
 	{"Calibration",ItemType::ACTION,nullptr,nullptr,Screen::CALIBRATION},
-    {"Line Follow",ItemType::ACTION,nullptr,nullptr,Screen::LINE_FOLLOW},
+  {"Line Follow",ItemType::ACTION,nullptr,nullptr,Screen::LINE_FOLLOW},
 	{"Sensor View",ItemType::ACTION,nullptr,nullptr,Screen::SENSOR_VIEW},
 	{"Motor Test",ItemType::ACTION,nullptr,nullptr,Screen::MOTOR_TEST},
 	{"kp",ItemType::FLOAT,&kp,nullptr,Screen::DASHBOARD},
@@ -82,8 +82,10 @@ void UpdateButtons()
 	okEvent = ok.read();
 }
 
-void DrawDashboard()
-{
+void DrawDashboard(){
+
+	bool blink = (millis() / 500) & 1;
+
 	if (selectedItem < topItem)
 		topItem = selectedItem;
 	if (selectedItem >= topItem + visibleItems)
@@ -93,12 +95,12 @@ void DrawDashboard()
 	{
 		u8g2.setFont(u8g2_font_6x12_tf);
 		u8g2.drawStr(28,10,"DASHBOARD");
-		u8g2.drawHLine(0,13,128);
+		u8g2.drawHLine(0,12,128);
 		for(byte i=0;i<visibleItems;i++){
 			byte index = topItem + i;
 			if(index >= ITEM_COUNT)
 				break;
-			int y = 24 + i * 10;
+			int y = 22 + i * 10;
 			if(index == selectedItem)
 				u8g2.drawStr(0,y,">");
 			u8g2.drawStr(10,y,dashboard[index].title);
@@ -108,10 +110,13 @@ void DrawDashboard()
 				dtostrf(*(float*)dashboard[index].value,4,2,buf);
 				if(editing && index==selectedItem)
 				{
-					u8g2.drawBox(82,y-9,32,11);
-					u8g2.setDrawColor(0);
-					u8g2.drawStr(86,y,buf);
-					u8g2.setDrawColor(1);
+					if(blink){
+						u8g2.drawBox(84,y-9,34,11);
+						u8g2.setDrawColor(0);
+						u8g2.drawStr(86,y,buf);
+						u8g2.setDrawColor(1);
+					}else
+						u8g2.drawStr(86,y,buf);
 				}
 				else
 					u8g2.drawStr(86,y,buf);
@@ -121,10 +126,13 @@ void DrawDashboard()
 				sprintf(buf,"%d",*(int*)dashboard[index].value);
 				if(editing && index==selectedItem)
 				{
-					u8g2.drawBox(82,y-9,32,11);
-					u8g2.setDrawColor(0);
-					u8g2.drawStr(86,y,buf);
-					u8g2.setDrawColor(1);
+					if(blink){
+						u8g2.drawBox(84,y-9,34,11);
+						u8g2.setDrawColor(0);
+						u8g2.drawStr(86,y,buf);
+						u8g2.setDrawColor(1);
+					}else
+						u8g2.drawStr(86,y,buf);
 				}
 				else
 					u8g2.drawStr(86,y,buf);
@@ -134,10 +142,13 @@ void DrawDashboard()
 				OptionItem *opt = dashboard[index].option;
 				if(editing && index==selectedItem)
 				{
-					u8g2.drawBox(82,y-9,32,11);
-					u8g2.setDrawColor(0);
-					u8g2.drawStr(86,y,opt->options[*opt->index]);
-					u8g2.setDrawColor(1);
+					if(blink){
+						u8g2.drawBox(84,y-9,34,11);
+						u8g2.setDrawColor(0);
+						u8g2.drawStr(86,y,opt->options[*opt->index]);
+						u8g2.setDrawColor(1);
+					}else
+						u8g2.drawStr(86,y,opt->options[*opt->index]);
 				}
 				else
 					u8g2.drawStr(86,y,opt->options[*opt->index]);

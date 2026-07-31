@@ -26,26 +26,26 @@ struct EEPROMData
 
 void SaveSettings()
 {
-    EEPROMData data;
+    // EEPROMData data;
 
-    data.magic = EEPROM_MAGIC;
+    // data.magic = EEPROM_MAGIC;
 
-    data.kp = kp;
-    data.ki = ki;
-    data.kd = kd;
+    // data.kp = kp;
+    // data.ki = ki;
+    // data.kd = kd;
 
-    data.baseSpeed = baseSpeed;
+    // data.baseSpeed = baseSpeed;
 
-    data.inverseTrack = inverseTrack;
-    data.llrIdx = llrIdx;
+    // data.inverseTrack = inverseTrack;
+    // data.llrIdx = llrIdx;
 
-    for (byte i = 0; i < SENSOR_COUNT; i++)
-    {
-        data.minValue[i] = minValue[i];
-        data.maxValue[i] = maxValue[i];
-    }
+    // for (byte i = 0; i < SENSOR_COUNT; i++)
+    // {
+    //     data.minValue[i] = minValue[i];
+    //     data.maxValue[i] = maxValue[i];
+    // }
 
-    EEPROM.put(0, data);
+    // EEPROM.put(0, data);
 }
 
 //=====================================================
@@ -54,29 +54,29 @@ void SaveSettings()
 
 void LoadSettings()
 {
-    EEPROMData data;
+    // EEPROMData data;
 
-    EEPROM.get(0, data);
+    // EEPROM.get(0, data);
 
-    // First boot or invalid EEPROM
-    if (data.magic != EEPROM_MAGIC)
-    {
-        SaveSettings();
-        return;
-    }
+    // // First boot or invalid EEPROM
+    // if (data.magic != EEPROM_MAGIC)
+    // {
+    //     SaveSettings();
+    //     return;
+    // }
 
-    kp = data.kp;
-    ki = data.ki;
-    kd = data.kd;
+    // kp = data.kp;
+    // ki = data.ki;
+    // kd = data.kd;
 
-    baseSpeed = data.baseSpeed;
+    // baseSpeed = data.baseSpeed;
 
-    inverseTrack = data.inverseTrack;
-    llrIdx = data.llrIdx;
+    // inverseTrack = data.inverseTrack;
+    // llrIdx = data.llrIdx;
 
-    for (byte i = 0; i < SENSOR_COUNT; i++)
-    {
-        minValue[i] = data.minValue[i];
-        maxValue[i] = data.maxValue[i];
-    }
+    // for (byte i = 0; i < SENSOR_COUNT; i++)
+    // {
+    //     minValue[i] = data.minValue[i];
+    //     maxValue[i] = data.maxValue[i];
+    // }
 }
