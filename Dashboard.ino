@@ -29,7 +29,7 @@ struct OptionItem
 	byte count;
 };
 
-const char *llrOptions[] = {"LFT","RGT","CTR"};
+const char *llrOptions[] = {"LFT","RGT","STR"};
 byte llrIdx = 0;
 OptionItem llr ={llrOptions,&llrIdx,3};
 

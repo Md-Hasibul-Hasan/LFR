@@ -17,11 +17,17 @@ enum class RobotState
 
 RobotState robotState = RobotState::FOLLOW_LINE;
 
+
+
 const unsigned long GAP_TIMEOUT = 250;
 unsigned long gapStartTime = 0;
 
-unsigned long TURN_FORWARD_TIME = 60;
+const unsigned long TURN_FORWARD_TIME = 20; // check 20 30
 unsigned long turnStartTime = 0;
+
+const unsigned long JUNCTION_FORWARD_TIME = 25;
+unsigned long junctionStartTime = 0;
+bool junctionChecked = false;
 
 void RobotInit()
 {
@@ -135,60 +141,18 @@ void GapState(){
 
 
 
-void SearchLineState()
-{
-    /*
-    -----------------------------------------
-    SEARCH_LINE STATE
-
-    The robot failed to recover the line
-    during the GAP state.
-
-    Step 1
-        Disable PID control.
-
-    Step 2
-        Rotate toward the last known
-        line position.
-
-    Step 3
-        Keep checking the sensors.
-
-    Step 4
-        If the line is detected:
-            - Detect track color.
-            - Return to FOLLOW_LINE.
-
-    Step 5
-        If the line is still not found:
-            - Continue searching.
-            - Future: perform wider search.
-
-    Transition:
-
-        SEARCH_LINE
-              │
-        Line Found ?
-          │      │
-         NO     YES
-          │      │
-     Continue   FOLLOW_LINE
-     Searching
-    -----------------------------------------
-    */
-
-    const int searchSpeed = 120;
+void SearchLineState(){
 
     // Search toward the last known line position
     if (lastPosition < 0)
     {
         // Last line was on the left
-        DriveMotor(-searchSpeed, searchSpeed);
+        DriveMotor(-baseSpeed, baseSpeed);
     }
     else
     {
         // Last line was on the right
-        DriveMotor(searchSpeed, -searchSpeed);
+        DriveMotor(baseSpeed, -baseSpeed);
     }
 
     // Line found
@@ -227,14 +191,17 @@ void TurnLeftState()
 
 void TurnRightState()
 {
+    // Step 1 : একটু সামনে যাও
     if (millis() - turnStartTime < TURN_FORWARD_TIME)
     {
         DriveMotor(baseSpeed, baseSpeed);
         return;
     }
 
+    // Step 2 : Right Rotate
     DriveMotor(baseSpeed, -baseSpeed);
 
+    // Step 3 : Line center এ আসলে Stop Turning
     if (norValue[3] > 500 || norValue[4] > 500)
     {
         robotState = RobotState::FOLLOW_LINE;
@@ -247,93 +214,93 @@ void TurnRightState()
 }
 
 
+
 void JunctionState()
 {
-    /*
-    -----------------------------------------
-    JUNCTION STATE
+    // প্রথমবার Junction এ ঢুকলে
+    if (!junctionChecked)
+    {
+        junctionChecked = true;
+        junctionStartTime = millis();
+    }
 
-    Robot detected Cross or T Junction.
+    // Junction এর মাঝখানে যাও
+    if (millis() - junctionStartTime < JUNCTION_FORWARD_TIME)
+    {
+        DriveMotor(baseSpeed, baseSpeed);
+        return;
+    }
 
-    Future implementation:
+    // আবার Sensor পড়ো
+    ReadSensors();
 
-    Step 1
-        Detect junction type.
-            - Cross
-            - T Junction
-            - Left Branch
-            - Right Branch
+    bool left =
+        norValue[0] > 500 ||
+        norValue[1] > 500 ||
+        norValue[2] > 500;
 
-    Step 2
-        Apply competition rule.
+    bool center =
+        norValue[3] > 500 ||
+        norValue[4] > 500;
 
-    Example:
-        Left Priority
-        Right Priority
-        Straight Priority
+    bool right =
+        norValue[5] > 500 ||
+        norValue[6] > 500 ||
+        norValue[7] > 500;
+        junctionChecked = false;
 
-    Step 3
-        Execute turn.
+    // +  Cross
+    if (left && center && right)
+    {
+        robotState = RobotState::FOLLOW_LINE;
+    }
 
-    Step 4
-        Line centered again.
+    // ├
+    else if (left && center && !right)
+    {
+        turnStartTime = millis();
+        robotState = RobotState::TURN_LEFT;
+    }
 
-    Step 5
-        Return FOLLOW_LINE.
+    // ┤
+    else if (!left && center && right)
+    {
+        turnStartTime = millis();
+        robotState = RobotState::TURN_RIGHT;
+    }
 
-    Transition
+    // ┬
+    else if (center && !left && !right)
+    {
+        switch (llrIdx)
+        {
+        case 0:
+            turnStartTime = millis();
+            robotState = RobotState::TURN_LEFT;
+            break;
 
-        JUNCTION
-            │
-        Decision
-            │
-        Execute Turn
-            │
-        FOLLOW_LINE
-    -----------------------------------------
-    */
+        case 1:
+            turnStartTime = millis();
+            robotState = RobotState::TURN_RIGHT;
+            break;
 
-    robotState = RobotState::FOLLOW_LINE;
+        case 2:
+        default:
+            robotState = RobotState::FOLLOW_LINE;
+            break;
+        }
+    }
+    else
+    {
+        robotState = RobotState::FOLLOW_LINE;
+    }
 }
+
+
 
 void RoundaboutState()
 {
-    /*
-    -----------------------------------------
-    ROUNDABOUT STATE
-
-    Robot entered a roundabout.
-
-    Future implementation:
-
-    Step 1
-        Detect circle entry.
-
-    Step 2
-        Follow circular path.
-
-    Step 3
-        Detect exit line.
-
-    Step 4
-        Align with exit.
-
-    Step 5
-        Return FOLLOW_LINE.
-
-    Transition
-
-        ROUNDABOUT
-              │
-        Circle Follow
-              │
-        Exit Found
-              │
-        FOLLOW_LINE
-    -----------------------------------------
-    */
-
-    robotState = RobotState::FOLLOW_LINE;
+   robotState = RobotState::FOLLOW_LINE;
 }
 
 
