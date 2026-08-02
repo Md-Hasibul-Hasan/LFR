@@ -1,3 +1,5 @@
+// LIve sensor view
+
 #include "Globals.h"
 
 void DrawSensorView()
@@ -12,28 +14,28 @@ void DrawSensorView()
         u8g2.drawStr(30, 8, "SENSOR VIEW");
         u8g2.drawHLine(0, 10, 128);
 
-        sprintf(buf, "S0:%4d", norValue[0]);
+        sprintf(buf, "S0:%4d", rawValue[0]);
         u8g2.drawStr(0, 20, buf);
 
-        sprintf(buf, "S1:%4d", norValue[1]);
+        sprintf(buf, "S1:%4d", rawValue[1]);
         u8g2.drawStr(0, 29, buf);
 
-        sprintf(buf, "S2:%4d", norValue[2]);
+        sprintf(buf, "S2:%4d", rawValue[2]);
         u8g2.drawStr(0, 38, buf);
 
-        sprintf(buf, "S3:%4d", norValue[3]);
+        sprintf(buf, "S3:%4d", rawValue[3]);
         u8g2.drawStr(0, 47, buf);
 
-        sprintf(buf, "S4:%4d", norValue[4]);
+        sprintf(buf, "S4:%4d", rawValue[4]);
         u8g2.drawStr(68, 20, buf);
 
-        sprintf(buf, "S5:%4d", norValue[5]);
+        sprintf(buf, "S5:%4d", rawValue[5]);
         u8g2.drawStr(68, 29, buf);
 
-        sprintf(buf, "S6:%4d", norValue[6]);
+        sprintf(buf, "S6:%4d", rawValue[6]);
         u8g2.drawStr(68, 38, buf);
 
-        sprintf(buf, "S7:%4d", norValue[7]);
+        sprintf(buf, "S7:%4d", rawValue[7]);
         u8g2.drawStr(68, 47, buf);
 
         sprintf(buf, "Pos:%4d", position);

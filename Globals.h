@@ -55,6 +55,8 @@ extern byte llrIdx;
 
 extern int minValue[SENSOR_COUNT];
 extern int maxValue[SENSOR_COUNT];
+extern int rawValue[SENSOR_COUNT];
+extern int norValue[SENSOR_COUNT];
 
 
 void SaveSettings();

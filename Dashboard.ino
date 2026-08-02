@@ -5,9 +5,9 @@
 
 U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
-Button up(A2); 
-Button down(A3);
-Button ok(A1);
+Button up(A1); 
+Button down(A2);
+Button ok(A3);
 
 Button::Event upEvent;
 Button::Event downEvent;
@@ -196,7 +196,7 @@ void HandleDashboard()
 		   downEvent == Button::Event::REPEAT)
 		{
 			if(dashboard[selectedItem].type == ItemType::FLOAT)
-				(*(float*)dashboard[selectedItem].value) -= 0.50f;
+				(*(float*)dashboard[selectedItem].value) -= 0.05f;
 			else if(dashboard[selectedItem].type == ItemType::INT)
 				(*(int*)dashboard[selectedItem].value)--;
 			else if(dashboard[selectedItem].type == ItemType::OPTION)

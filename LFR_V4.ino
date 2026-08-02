@@ -9,9 +9,9 @@
 Screen currentScreen = Screen::DASHBOARD;
 
 void FactoryReset(){
-    kp = 20.0;
-    ki = 0.0;
-    kd = 10.0;
+    kp = 1.0;
+    ki = 1.0;
+    kd = 1.0;
     baseSpeed = 150;
     inverseTrack = false;
     llrIdx = 0;

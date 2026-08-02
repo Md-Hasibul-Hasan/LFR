@@ -43,7 +43,8 @@ void HandleMotorTest()
             {
                 u8g2.setFont(u8g2_font_6x12_tf);
 
-                u8g2.drawStr(22,12,"MOTOR TEST");
+                u8g2.drawStr(22,12,"MOTOR TEST: ");
+                u8g2.print(baseSpeed);
                 u8g2.drawHLine(0,14,128);
 
                 u8g2.setCursor(20,35);
