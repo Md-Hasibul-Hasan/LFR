@@ -152,9 +152,9 @@ void ReadSensors(){
         }
 
         if (inverseTrack)
-            norValue[i] = (rawValue[i] - minValue[i]) * 1000 / range;
+            norValue[i] = (rawValue[i] - minValue[i]) * 1000L / range;
         else
-            norValue[i] = (maxValue[i] - rawValue[i]) * 1000 / range;
+            norValue[i] = (maxValue[i] - rawValue[i]) * 1000L / range;
 
         norValue[i] = constrain(norValue[i], 0, 1000);
     }
@@ -204,29 +204,29 @@ bool IsLineLost()
 
 bool IsJunction()
 {
-    // bool left   = norValue[0] > 500 && norValue[1] > 500;
-    // bool center = norValue[3] > 500 && norValue[4] > 500;
-    // bool right  = norValue[6] > 500 && norValue[7] > 500;
+    bool left   = norValue[0] > 500 && norValue[1] > 500;
+    bool center = norValue[3] > 500 && norValue[4] > 500;
+    bool right  = norValue[6] > 500 && norValue[7] > 500;
 
-    // return left && center && right;
-    return false;
+    return left && center && right;
+    // return false;
 }
 
 
 
 bool IsHardLeft()
 {
-    // bool left = norValue[0] > 500 && norValue[1] > 500 && norValue[2] > 500;
-    // bool right = norValue[6] > 500 && norValue[7] > 500;
-    // return left && !right;
-    return false;
+    bool left = norValue[0] > 500 && norValue[1] > 500 && norValue[2] > 500;
+    bool right = norValue[6] > 500 && norValue[7] > 500;
+    return left && !right;
+    // return false;
 }
 
 bool IsHardRight()
 {
-    // bool left = norValue[0] > 500 && norValue[1] > 500 && norValue[2] > 500;
-    // bool right = norValue[6] > 500 && norValue[7] > 500;
-    // return !left && right;
+    bool left = norValue[0] > 500 && norValue[1] > 500 && norValue[2] > 500;
+    bool right = norValue[6] > 500 && norValue[7] > 500;
+    return !left && right;
     return false;
 }
 

@@ -13,7 +13,6 @@ struct EEPROMData
 
     int baseSpeed;
 
-    bool inverseTrack;
     byte llrIdx;
 
     int minValue[SENSOR_COUNT];
@@ -36,7 +35,6 @@ void SaveSettings()
 
     data.baseSpeed = baseSpeed;
 
-    data.inverseTrack = inverseTrack;
     data.llrIdx = llrIdx;
 
     for (byte i = 0; i < SENSOR_COUNT; i++)
@@ -71,7 +69,6 @@ void LoadSettings()
 
     baseSpeed = data.baseSpeed;
 
-    inverseTrack = data.inverseTrack;
     llrIdx = data.llrIdx;
 
     for (byte i = 0; i < SENSOR_COUNT; i++)

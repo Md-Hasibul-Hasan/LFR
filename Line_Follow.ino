@@ -59,15 +59,7 @@ void FollowLineState()
 {
     /*
     -----------------------------------------
-    FOLLOW_LINE STATE
 
-    Robot normal PID line following mode.
-
-    Responsibilities:
-    1. Follow line using PID.
-    2. Continuously monitor sensor patterns.
-    3. Change state when a special track
-       feature is detected.
 
     Priority (Highest → Lowest)
 
@@ -337,7 +329,6 @@ Robot Update Loop
 void RobotUpdate()
 {
     ReadSensors();
-
     switch (robotState)
     {
     case RobotState::FOLLOW_LINE:
@@ -396,7 +387,7 @@ void LineFollow()
         switch (robotState)
         {
         case RobotState::FOLLOW_LINE:
-            u8g2.print("FOLLOW");
+            u8g2.print("PID");
             break;
 
         case RobotState::SEARCH_LINE:
@@ -431,6 +422,14 @@ void LineFollow()
         u8g2.setCursor(0, 40);
         u8g2.print("Pos: ");
         u8g2.print(position);
+
+        u8g2.setCursor(30, 40);
+        u8g2.print("TCK: ");
+        u8g2.print(inverseTrack ? "W":"B");
+
+        u8g2.setCursor(30, 40);
+        u8g2.print("TCK: ");
+        u8g2.print(inverseTrack ? "W":"B");
 
         u8g2.setCursor(0, 54);
         u8g2.print("Total: ");
