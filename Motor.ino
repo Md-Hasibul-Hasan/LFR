@@ -35,10 +35,23 @@ void DriveMotor(int leftMotorSpeed, int rightMotorSpeed)
     analogWrite(RIGHT_PWM, abs(rightMotorSpeed));
 }
 
-void SetMotorSpeed(float pid)
-{
-    int leftMotorSpeed = baseSpeed + pid;
-    int rightMotorSpeed = baseSpeed - pid;
+
+
+void SetMotorSpeed(float pid){
+    int corr = constrain((int)pid, -200, 200);
+
+    int speed = baseSpeed;
+
+    // Sharp correction -> slow down
+    if (abs(corr) > 130)
+        speed = baseSpeed * 55 / 100;
+
+    // Almost straight -> speed up
+    else if (abs(corr) < 40)
+        speed = baseSpeed * 125 / 100;
+
+    int leftMotorSpeed  = speed + corr;
+    int rightMotorSpeed = speed - corr;
 
     DriveMotor(leftMotorSpeed, rightMotorSpeed);
 }

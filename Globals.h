@@ -49,6 +49,7 @@ extern int baseSpeed;
 extern int error;
 extern int position;
 extern bool editing;
+extern int activeSensorCount;
 
 extern byte llrIdx;
 
