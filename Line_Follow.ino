@@ -16,28 +16,22 @@ enum class RobotState
 RobotState robotState = RobotState::FOLLOW_LINE;
 
 
+
 // ==================================================
 // TIMING
 // ==================================================
 
-const unsigned long GAP_TIMEOUT = 250;
-const unsigned long TURN_FORWARD_TIME = 20;
-const unsigned long JUNCTION_TIMEOUT = 250;
+const unsigned long GAP_TIMEOUT  = 250;
+const unsigned long TURN_MIN_TIME = 100;
+const unsigned long TURN_TIMEOUT = 300;
 
-int searchDirection = 1;   // -1 = LEFT, 1 = RIGHT
 unsigned long gapStartTime = 0;
 unsigned long turnStartTime = 0;
-unsigned long junctionStartTime = 0;
 
+int searchDirection = 1;   // -1 = LEFT, +1 = RIGHT
 
-// ==================================================
-// JUNCTION
-// ==================================================
-
-int junctionTurn = 0;
-
-// Prevent immediate re-detection of same junction
 bool junctionLocked = false;
+bool turnLocked = false;
 
 
 // ==================================================
@@ -72,10 +66,7 @@ void RobotStop()
 // CHOOSE JUNCTION TURN
 // ==================================================
 
-int ChooseJunctionTurn(bool left,
-                       bool center,
-                       bool right)
-{
+int ChooseJunctionTurn(bool left,bool center,bool right){
     /*
         Return:
 
@@ -126,7 +117,7 @@ int ChooseJunctionTurn(bool left,
     }
 
 
-    return 0;
+    return 10;
 }
 
 
@@ -171,40 +162,48 @@ void FollowLineState()
     if (!junctionLocked && IsJunction())
     {
         ResetPID();
-
-        junctionStartTime = millis();
         robotState = RobotState::JUNCTION;
-
         return;
     }
 
 
-    // ------------------------------------------
-    // Hard Left
-    // ------------------------------------------
+    // Turn lock release
+    if (turnLocked)
+    {
+        bool center =
+            norValue[3] > 500 ||
+            norValue[4] > 500;
 
-    if (IsHardLeft())
+        bool outer =
+            norValue[0] > 500 ||
+            norValue[1] > 500 ||
+            norValue[6] > 500 ||
+            norValue[7] > 500;
+
+        // Robot normal line-এ ফিরে এসেছে
+        if (center && !outer)
+        {
+            turnLocked = false;
+        }
+    }
+
+
+    // Hard Left
+    if (!turnLocked && IsHardLeft())
     {
         ResetPID();
-
         turnStartTime = millis();
         robotState = RobotState::TURN_LEFT;
-
         return;
     }
 
 
-    // ------------------------------------------
     // Hard Right
-    // ------------------------------------------
-
-    if (IsHardRight())
+    if (!turnLocked && IsHardRight())
     {
         ResetPID();
-
         turnStartTime = millis();
         robotState = RobotState::TURN_RIGHT;
-
         return;
     }
 
@@ -249,14 +248,15 @@ void GapState()
         return;
     }
 
+
     // অনেকক্ষণেও line না পেলে SEARCH করবে
     if (millis() - gapStartTime >= GAP_TIMEOUT)
     {
-        // শেষবার line কোন পাশে ছিল সেটা একবার save করো
+        // Lock first search direction
         if (lastPosition < 0)
-            searchDirection = -1;   // LEFT
+            searchDirection = -1; // LEFT
         else
-            searchDirection = 1;    // RIGHT
+            searchDirection = 1; // RIGHT
 
         robotState = RobotState::SEARCH_LINE;
         return;
@@ -270,64 +270,73 @@ void GapState()
 
 void SearchLineState()
 {
-    // যে direction আগে save করা হয়েছে
-    // শুধু সেই direction-এই search করবে
+    // ------------------------------------------
+    // Rotate toward last known line direction
+    // ------------------------------------------
 
     if (searchDirection == -1)
     {
-        // LEFT rotate
+        // LEFT
         DriveMotor(-baseSpeed, baseSpeed);
     }
     else
     {
-        // RIGHT rotate
+        // RIGHT
         DriveMotor(baseSpeed, -baseSpeed);
     }
 
-    // Line আবার পেয়ে গেলে PID-এ ফিরে যাও
+
+    // ------------------------------------------
+    // Line found
+    // ------------------------------------------
+
     if (!IsLineLost())
     {
         ResetPID();
+
         robotState = RobotState::FOLLOW_LINE;
+        return;
     }
 }
-
 
 // ==================================================
 // TURN LEFT
 // ==================================================
 
+
+
 void TurnLeftState()
 {
-    /*
-        Small forward movement first.
+    unsigned long elapsed = millis() - turnStartTime;
 
-        This helps the rotation center reach
-        the actual corner before rotating.
-    */
+    // LEFT rotate
+    DriveMotor(-baseSpeed, baseSpeed);
 
+    // Minimum time পর্যন্ত কোনো sensor দেখে exit করবে না
+    if (elapsed < TURN_MIN_TIME)
+        return;
 
-    if (millis() - turnStartTime < TURN_FORWARD_TIME)
+    // Minimum turn শেষ হওয়ার পর
+    // center line পাওয়া গেলে PID-এ ফিরে যাও
+    bool center =
+        norValue[3] > 500 ||
+        norValue[4] > 500;
+
+    if (center)
     {
-        DriveMotor(baseSpeed, baseSpeed);
+        turnLocked = true;
+        ResetPID();
+        robotState = RobotState::FOLLOW_LINE;
         return;
     }
 
-
-    // Rotate left
-    DriveMotor(-baseSpeed, baseSpeed);
-
-
-    /*
-        Exit only when center sees line again.
-    */
-
-    if (norValue[3] > 500 ||
-        norValue[4] > 500)
+    // Safety timeout
+    if (elapsed >= TURN_TIMEOUT)
     {
+        turnLocked = true;
         ResetPID();
-
         robotState = RobotState::FOLLOW_LINE;
+        return;
     }
 }
 
@@ -336,28 +345,39 @@ void TurnLeftState()
 // TURN RIGHT
 // ==================================================
 
+
 void TurnRightState()
 {
-    if (millis() - turnStartTime < TURN_FORWARD_TIME)
+    unsigned long elapsed = millis() - turnStartTime;
+
+    // RIGHT rotate
+    DriveMotor(baseSpeed, -baseSpeed);
+
+    // Minimum time পর্যন্ত exit না
+    if (elapsed < TURN_MIN_TIME)
+        return;
+
+    bool center =
+        norValue[3] > 500 ||
+        norValue[4] > 500;
+
+    if (center)
     {
-        DriveMotor(baseSpeed, baseSpeed);
+        turnLocked = true;
+        ResetPID();
+        robotState = RobotState::FOLLOW_LINE;
         return;
     }
 
-
-    // Rotate right
-    DriveMotor(baseSpeed, -baseSpeed);
-
-
-    if (norValue[3] > 500 ||
-        norValue[4] > 500)
+    // Safety timeout
+    if (elapsed >= TURN_TIMEOUT)
     {
+        turnLocked = true;
         ResetPID();
-
         robotState = RobotState::FOLLOW_LINE;
+        return;
     }
 }
-
 
 // ==================================================
 // JUNCTION
@@ -396,7 +416,7 @@ void JunctionState()
     // All directions available -> straight
     // ------------------------------------------------
 
-    if (left && center && right)
+    if (left && center && right && activeSensorCount >= 6)
     {
         junctionLocked = true;
 
@@ -414,9 +434,17 @@ void JunctionState()
     // Choose available direction
     // ------------------------------------------------
 
-    junctionTurn =
-        ChooseJunctionTurn(left, center, right);
+    int junctionTurn = ChooseJunctionTurn(left, center, right);
 
+    // No valid path detected
+    if (junctionTurn == 2)
+    {
+        junctionLocked = true;
+
+        ResetPID();
+        robotState = RobotState::FOLLOW_LINE;
+        return;
+    }
 
     junctionLocked = true;
 
@@ -426,7 +454,6 @@ void JunctionState()
     if (junctionTurn == -1)
     {
         turnStartTime = millis();
-
         robotState = RobotState::TURN_LEFT;
         return;
     }
@@ -437,7 +464,6 @@ void JunctionState()
     if (junctionTurn == 1)
     {
         turnStartTime = millis();
-
         robotState = RobotState::TURN_RIGHT;
         return;
     }
@@ -457,19 +483,7 @@ void JunctionState()
     }
 
 
-    // ------------------------------------------------
-    // Safety timeout
-    // ------------------------------------------------
 
-    if (millis() - junctionStartTime >
-        JUNCTION_TIMEOUT)
-    {
-        junctionLocked = true;
-
-        ResetPID();
-
-        robotState = RobotState::FOLLOW_LINE;
-    }
 }
 
 
@@ -620,8 +634,15 @@ void LineFollow()
     if (okEvent == Button::Event::SHORT)
     {
         RobotStop();
-
         ResetPID();
+
+        // Reset robot state for next run
+        robotState = RobotState::FOLLOW_LINE;
+
+        // Reset temporary states
+        searchDirection = 1;
+        junctionLocked = false;
+        turnLocked = false;
 
         currentScreen = Screen::DASHBOARD;
     }

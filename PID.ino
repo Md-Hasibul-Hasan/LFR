@@ -7,6 +7,8 @@
 // float I = 0.0;
 // float D;
 // float lastError = 0.0;
+// float integral = 0;
+
 
 // float CalculatePID(int error){
 //   P = error;
@@ -83,3 +85,4 @@ float CalculatePID(int error)
 
     return constrain(pid, -255.0f, 255.0f);
 }
+

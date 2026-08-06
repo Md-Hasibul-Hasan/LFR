@@ -1,249 +1,51 @@
-// void Calibration(){
-
-//   for(int i=0; i<SENSOR_COUNT; i++){
-//     minValue[i]=1023;
-//     maxValue[i]=0;
-//   }
-
-//   unsigned long startTime = millis();
-//   while(millis() - startTime < 5000){
-
-//     for(int i=0; i<SENSOR_COUNT; i++){
-//       int val = ReadMuxChannel(i);
-//       if(val<minValue[i]) minValue[i]=val;
-//       if(val>maxValue[i]) maxValue[i]=val;
-//     }
-
-//   }
-// }
 
 
-// void ReadSensors(){
-
-//     for (int i = 0; i < SENSOR_COUNT; i++){
-//         // Read Raw Value
-//         rawValue[i] = ReadMuxChannel(i);
-
-//         int range = maxValue[i] - minValue[i];
-
-//         if(range == 0){
-//           norValue[i] = 0;
-//         } else{
-//             if(inverseTrack){
-//               norValue[i] = (rawValue[i] - minValue[i]) * 1000 / range; // Black ↑ White ↓
-//             }else{
-//               norValue[i] = (maxValue[i] - rawValue[i]) * 1000 / range; // White ↑ Black ↓
-//             }
-
-//         }
-
-//         // Normalize (0 - 1000)
-//         norValue[i] = constrain(norValue[i], 0, 1000);
-//         // if(inverseTrack) norValue[i] = 1000 - norValue[i];
-//     }
-
-//     position = CalculatePosition();
-//     error = CalculateError(position);
-// }
+==========================
 
 
+Turn protection:
 
-void JunctionState()
-{
-    /*
-    ==========================================================
-                        JUNCTION STATE
-    ==========================================================
-
-    This state is entered after FOLLOW_LINE detects a junction.
-
-    Responsibilities
-    ----------------
-    1. Confirm junction.
-    2. Identify junction type.
-    3. Select path according to competition rule.
-    4. Execute the selected movement.
-    5. Detect line again.
-    6. Return to FOLLOW_LINE.
-
-    ----------------------------------------------------------
-    Step 1 : Confirm Junction
-    ----------------------------------------------------------
-    Avoid false detection by checking the sensor pattern
-    for a short period or several consecutive readings.
-
-    ----------------------------------------------------------
-    Step 2 : Detect Junction Type
-    ----------------------------------------------------------
-    Examples
-
-        +
-        Cross Junction
-
-        ├──
-        Left Branch
-
-        ──┤
-        Right Branch
-
-        ┴
-        T Junction
-
-    Future function
-
-        JunctionType DetectJunction();
-
-    ----------------------------------------------------------
-    Step 3 : Apply Navigation Rule
-    ----------------------------------------------------------
-    Decide which direction to take.
-
-    Example
-
-        LEFT_PRIORITY
-        RIGHT_PRIORITY
-        STRAIGHT_PRIORITY
-
-    Future
-
-        DecideJunctionAction();
-
-    ----------------------------------------------------------
-    Step 4 : Execute Movement
-    ----------------------------------------------------------
-    Possible actions
-
-        Go Straight
-        Turn Left
-        Turn Right
-        U Turn
-
-    Can reuse
-
-        TurnLeftState()
-        TurnRightState()
-
-    ----------------------------------------------------------
-    Step 5 : Recover Line
-    ----------------------------------------------------------
-    Continue moving until
-
-        !IsLineLost()
-
-    or
-
-        Center sensors detect line.
-
-    ----------------------------------------------------------
-    Step 6 : Return
-    ----------------------------------------------------------
-
-        robotState = FOLLOW_LINE;
-
-    ==========================================================
-    */
-
-    robotState = RobotState::FOLLOW_LINE;
-}
-
-
-
-
-পুরোনো code থেকে নিতাম
-
-✅ Adaptive PID
-
-✅ Dead End Memory (badTurn[])
-
-✅ chooseTurn() (শুধু T Junction-এর জন্য)
-
-✅ Junction detect-এ active sensor count (sum বা activeSensorCount)
-
-
-
+TURN LEFT
+    ↓
+20ms forward
+    ↓
+rotate LEFT
+    ↓
+center এখনও line?
+    │
+   YES
+    ↓
+keep rotating
+    ↓
+center line ছেড়ে দিল
+    ↓
+turnCenterReleased = true
+    ↓
+keep rotating
+    ↓
+center আবার line পেল
+    ↓
+ResetPID()
+    ↓
 FOLLOW_LINE
-      │
-      ▼
-JUNCTION DETECT
-(active sensors >= threshold)
-      │
-      ▼
-JUNCTION
-      │
-      ├── Forward 25~40 ms
-      │
-      ├── Read Sensors Again
-      │
-      ├── Cross  → FOLLOW_LINE
-      │
-      ├── Left Branch → TURN_LEFT
-      │
-      ├── Right Branch → TURN_RIGHT
-      │
-      └── T Junction → chooseTurn(llrIdx)
-                          │
-             ┌────────────┼────────────┐
-             ▼            ▼            ▼
-         TURN_LEFT   FOLLOW_LINE   TURN_RIGHT
 
 
+=========================
 
-==============================================
+Search:
 
-void JunctionState()
-{
-    bool left   = norValue[0] > 500 && norValue[1] > 500;
-    bool center = norValue[3] > 500 && norValue[4] > 500;
-    bool right  = norValue[6] > 500 && norValue[7] > 500;
-
-    // Cross Junction (+) -> Go Straight
-    if (left && center && right)
-    {
-        robotState = RobotState::FOLLOW_LINE;     
-    }
-
-    // Left Branch
-    else if (left && center)
-    {
-        turnStartTime = millis();
-        robotState = RobotState::TURN_LEFT;
-    }
-
-    // Right Branch
-    else if (center && right)
-    {
-        turnStartTime = millis();
-        robotState = RobotState::TURN_RIGHT;
-    }
-
-
-
-    // T Junction
-    else if (!left && center && !right)
-    {
-        switch (llrIdx)
-        {
-        case 0: // Left
-            turnStartTime = millis();
-            robotState = RobotState::TURN_LEFT;
-            break;
-
-        case 1: // Right
-            turnStartTime = millis();
-            robotState = RobotState::TURN_RIGHT;
-            break;
-
-        case 2: // Straight
-        default:
-            robotState = RobotState::FOLLOW_LINE;
-            break;
-        }
-    }
-
-    // Unknown -> Go Straight
-    else
-    {
-        robotState = RobotState::FOLLOW_LINE;
-    }
-}
-
+LINE LOST
+   ↓
+GAP
+   ↓
+preferred direction
+300ms
+   ↓
+not found
+   ↓
+opposite direction
+600ms
+   ↓
+not found
+   ↓
+STOP
