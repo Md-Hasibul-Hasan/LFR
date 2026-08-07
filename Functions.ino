@@ -23,6 +23,20 @@ int activeSensorCount = 0;
 int position = 0;
 int error = 0;
 
+unsigned long GAP_TIMEOUT = 250;
+unsigned long TURN_MIN_TIME = 100;
+unsigned long TURN_TIMEOUT = 300;
+unsigned long FINISH_CONFIRM_TIME = 500;
+unsigned long TRACK_SWITCH_TIME = 50;
+
+int SENSOR_THRESHOLD = 500;
+int LINE_LOST_THRESHOLD = 300;
+int TRACK_DIFF_THRESHOLD = 150;
+
+bool trackCandidateActive = false;
+bool trackCandidate = false;
+unsigned long trackCandidateStart = 0;
+
 
 // ==================================================
 // MUX READ
@@ -143,6 +157,9 @@ void Calibration()
 // TRACK TYPE
 // ==================================================
 
+
+
+
 void DetectTrack()
 {
     int edgeAvg =
@@ -155,11 +172,48 @@ void DetectTrack()
         (rawValue[3] +
          rawValue[4]) / 2;
 
-    // Not enough difference to make a safe decision
-    if (abs(centerAvg - edgeAvg) < 150)
-        return;
 
-    inverseTrack = (centerAvg > edgeAvg);
+    // Not enough difference
+    if (abs(centerAvg - edgeAvg) < TRACK_DIFF_THRESHOLD)
+    {
+        trackCandidateActive = false;
+        return;
+    }
+
+
+    // false = black line
+    // true  = white line
+    bool detectedTrack = (centerAvg > edgeAvg);
+
+
+    // Same track type
+    if (detectedTrack == inverseTrack)
+    {
+        trackCandidateActive = false;
+        return;
+    }
+
+
+    // New candidate
+    if (!trackCandidateActive ||
+        trackCandidate != detectedTrack)
+    {
+        trackCandidate = detectedTrack;
+        trackCandidateActive = true;
+        trackCandidateStart = millis();
+        return;
+    }
+
+
+    // Confirm before switching
+    if (millis() - trackCandidateStart >= TRACK_SWITCH_TIME)
+    {
+        inverseTrack = detectedTrack;
+
+        trackCandidateActive = false;
+
+        ResetPID();
+    }
 }
 
 
@@ -167,7 +221,7 @@ void DetectTrack()
 // READ + NORMALIZE
 // ==================================================
 
-void ReadSensors()
+void ReadSensors(bool detectTrack = false)
 {
     activeSensorCount = 0;
 
@@ -177,6 +231,14 @@ void ReadSensors()
     for (int i = 0; i < SENSOR_COUNT; i++)
     {
         rawValue[i] = ReadMuxChannel(i);
+    }
+
+    // Detect black/white track transition
+    if (detectTrack){
+            DetectTrack();
+        }
+    else{
+        trackCandidateActive  = false;
     }
 
 
@@ -214,7 +276,7 @@ void ReadSensors()
 
 
         // Digital-like active sensor
-        if (norValue[i] > 500)
+        if (norValue[i] > SENSOR_THRESHOLD)
         {
             activeSensorCount++;
         }
@@ -281,7 +343,7 @@ bool IsLineLost()
        even when no real line exists.
     */
 
-    return totalNorValue < 300;
+    return totalNorValue < LINE_LOST_THRESHOLD;
 }
 
 
@@ -292,16 +354,16 @@ bool IsLineLost()
 bool IsJunction()
 {
     bool left =
-        norValue[0] > 500 ||
-        norValue[1] > 500;
+        norValue[0] > SENSOR_THRESHOLD ||
+        norValue[1] > SENSOR_THRESHOLD;
 
     bool center =
-        norValue[3] > 500 ||
-        norValue[4] > 500;
+        norValue[3] > SENSOR_THRESHOLD ||
+        norValue[4] > SENSOR_THRESHOLD;
 
     bool right =
-        norValue[6] > 500 ||
-        norValue[7] > 500;
+        norValue[6] > SENSOR_THRESHOLD ||
+        norValue[7] > SENSOR_THRESHOLD;
 
 
     /*
@@ -328,16 +390,16 @@ bool IsJunction()
 bool IsHardLeft()
 {
     bool left =
-        norValue[0] > 500 ||
-        norValue[1] > 500;
+        norValue[0] > SENSOR_THRESHOLD ||
+        norValue[1] > SENSOR_THRESHOLD;
 
     bool center =
-        norValue[3] > 500 ||
-        norValue[4] > 500;
+        norValue[3] > SENSOR_THRESHOLD ||
+        norValue[4] > SENSOR_THRESHOLD;
 
     bool right =
-        norValue[6] > 500 ||
-        norValue[7] > 500;
+        norValue[6] > SENSOR_THRESHOLD ||
+        norValue[7] > SENSOR_THRESHOLD;
 
 
     return left && !center && !right;
@@ -351,16 +413,16 @@ bool IsHardLeft()
 bool IsHardRight()
 {
     bool left =
-        norValue[0] > 500 ||
-        norValue[1] > 500;
+        norValue[0] > SENSOR_THRESHOLD ||
+        norValue[1] > SENSOR_THRESHOLD;
 
     bool center =
-        norValue[3] > 500 ||
-        norValue[4] > 500;
+        norValue[3] > SENSOR_THRESHOLD ||
+        norValue[4] > SENSOR_THRESHOLD;
 
     bool right =
-        norValue[6] > 500 ||
-        norValue[7] > 500;
+        norValue[6] > SENSOR_THRESHOLD ||
+        norValue[7] > SENSOR_THRESHOLD;
 
 
     return right && !center && !left;
@@ -376,3 +438,19 @@ bool IsRoundabout()
 {
     return false;
 }
+
+bool IsFinishTrack()
+{
+    return activeSensorCount == SENSOR_COUNT;
+}
+
+void ResetTrackDetection()
+{
+    trackCandidateActive = false;
+    trackCandidate = false;
+    trackCandidateStart = 0;
+}
+
+
+
+

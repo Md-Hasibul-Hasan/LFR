@@ -20,6 +20,16 @@
 
 constexpr int SENSOR_COUNT = 8;
 
+extern unsigned long GAP_TIMEOUT;
+extern unsigned long TURN_MIN_TIME;
+extern unsigned long TURN_TIMEOUT;
+extern unsigned long FINISH_CONFIRM_TIME;
+extern unsigned long TRACK_SWITCH_TIME;
+
+extern int SENSOR_THRESHOLD;
+extern int LINE_LOST_THRESHOLD;
+extern int TRACK_DIFF_THRESHOLD;
+
 //=====================================================
 // Screen
 //=====================================================
@@ -36,6 +46,7 @@ enum class Screen
     DASHBOARD,
     SENSOR_VIEW,
     MOTOR_TEST,
+    SET_TIMER,
 };
 
 extern Screen currentScreen;

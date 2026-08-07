@@ -21,17 +21,17 @@ RobotState robotState = RobotState::FOLLOW_LINE;
 // TIMING
 // ==================================================
 
-const unsigned long GAP_TIMEOUT  = 250;
-const unsigned long TURN_MIN_TIME = 100;
-const unsigned long TURN_TIMEOUT = 300;
-
 unsigned long gapStartTime = 0;
 unsigned long turnStartTime = 0;
+unsigned long finishStartTime = 0;
+
 
 int searchDirection = 1;   // -1 = LEFT, +1 = RIGHT
 
 bool junctionLocked = false;
 bool turnLocked = false;
+
+bool finishCandidate = false;
 
 
 // ==================================================
@@ -141,6 +141,27 @@ void FollowLineState()
         PID
     */
 
+    // no needfor  current competition.. but need in future
+    // if (IsFinishTrack())
+    // {
+    //     if (!finishCandidate)
+    //     {
+    //         finishCandidate = true;
+    //         finishStartTime = millis();
+    //     }
+
+    //     if (millis() - finishStartTime >= FINISH_CONFIRM_TIME)
+    //     {
+    //         ResetPID();
+    //         robotState = RobotState::STOP;
+    //         return;
+    //     }
+    // }
+    // else
+    // {
+    //     finishCandidate = false;
+    // }
+
 
     // ------------------------------------------
     // Release junction lock after leaving it
@@ -171,14 +192,14 @@ void FollowLineState()
     if (turnLocked)
     {
         bool center =
-            norValue[3] > 500 ||
-            norValue[4] > 500;
+            norValue[3] > SENSOR_THRESHOLD ||
+            norValue[4] > SENSOR_THRESHOLD;
 
         bool outer =
-            norValue[0] > 500 ||
-            norValue[1] > 500 ||
-            norValue[6] > 500 ||
-            norValue[7] > 500;
+            norValue[0] > SENSOR_THRESHOLD ||
+            norValue[1] > SENSOR_THRESHOLD ||
+            norValue[6] > SENSOR_THRESHOLD ||
+            norValue[7] > SENSOR_THRESHOLD;
 
         // Robot normal line-এ ফিরে এসেছে
         if (center && !outer)
@@ -319,8 +340,8 @@ void TurnLeftState()
     // Minimum turn শেষ হওয়ার পর
     // center line পাওয়া গেলে PID-এ ফিরে যাও
     bool center =
-        norValue[3] > 500 ||
-        norValue[4] > 500;
+        norValue[3] > SENSOR_THRESHOLD ||
+        norValue[4] > SENSOR_THRESHOLD;
 
     if (center)
     {
@@ -358,8 +379,8 @@ void TurnRightState()
         return;
 
     bool center =
-        norValue[3] > 500 ||
-        norValue[4] > 500;
+        norValue[3] > SENSOR_THRESHOLD ||
+        norValue[4] > SENSOR_THRESHOLD;
 
     if (center)
     {
@@ -396,18 +417,18 @@ void JunctionState()
 
 
     bool left =
-        norValue[0] > 500 ||
-        norValue[1] > 500;
+        norValue[0] > SENSOR_THRESHOLD ||
+        norValue[1] > SENSOR_THRESHOLD;
 
 
     bool center =
-        norValue[3] > 500 ||
-        norValue[4] > 500;
+        norValue[3] > SENSOR_THRESHOLD ||
+        norValue[4] > SENSOR_THRESHOLD;
 
 
     bool right =
-        norValue[6] > 500 ||
-        norValue[7] > 500;
+        norValue[6] > SENSOR_THRESHOLD ||
+        norValue[7] > SENSOR_THRESHOLD;
 
 
     // ------------------------------------------------
@@ -420,7 +441,8 @@ void JunctionState()
     {
         junctionLocked = true;
 
-        DriveMotor(baseSpeed, baseSpeed);
+        // DriveMotor(baseSpeed, baseSpeed);
+        DriveMotor(50, 50);
 
         ResetPID();
 
@@ -437,7 +459,7 @@ void JunctionState()
     int junctionTurn = ChooseJunctionTurn(left, center, right);
 
     // No valid path detected
-    if (junctionTurn == 2)
+    if (junctionTurn == 10)
     {
         junctionLocked = true;
 
@@ -503,8 +525,13 @@ void StopState()
 
 void RobotUpdate()
 {
-    ReadSensors();
 
+    bool allowTrackDetection =
+        robotState == RobotState::FOLLOW_LINE ||
+        robotState == RobotState::GAP;
+
+    ReadSensors(allowTrackDetection);
+    // ReadSensors();
 
     switch (robotState)
     {
@@ -643,6 +670,12 @@ void LineFollow()
         searchDirection = 1;
         junctionLocked = false;
         turnLocked = false;
+
+        // Finish detection reset
+        finishCandidate = false;
+        finishStartTime = 0;
+
+        ResetTrackDetection();
 
         currentScreen = Screen::DASHBOARD;
     }

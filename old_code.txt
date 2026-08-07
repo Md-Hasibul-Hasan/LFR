@@ -1,51 +1,146 @@
 
 
-==========================
+==============================
+       LFR TUNING NOTE
+==============================
+
+1. SENSOR_THRESHOLD = 500
+   কাজ: Sensor line/floor আলাদা করে।
+   Line miss করলে → কমাও
+   Floor-কে line ধরলে → বাড়াও
+   Range: 400–650
+
+2. LINE_LOST_THRESHOLD = 300
+   কাজ: Line completely lost কিনা detect করে।
+   Lost detect না হলে → বাড়াও
+   Line থাকতেই lost দেখালে → কমাও
+   Range: 200–800
+
+3. Kp
+   কাজ: Line-এর দিকে correction strength।
+   Correction weak হলে → বাড়াও
+   বেশি aggressive/oscillation হলে → কমাও
+   Range: ~0.2–1.0
+
+4. Kd
+   কাজ: Oscillation/damping control।
+   Left-right oscillation হলে → বাড়াও
+   Robot বেশি sluggish হলে → কমাও
+   Range: ~0.5–4.0
+
+5. Ki = 0
+   কাজ: Accumulated error correction।
+   আপাতত 0 রাখাই ভালো।
+   PID stable হওয়ার আগে tune করার দরকার নেই।
+
+6. baseSpeed
+   কাজ: Robot-এর main forward speed।
+   প্রথমে কম speed-এ PID tune করো।
+   Stable হলে ধীরে ধীরে বাড়াও।
+   Suggested test: 100–180
+
+7. GAP_TIMEOUT = 250 ms
+   কাজ: Line হারানোর পর কতক্ষণ straight যাবে।
+   Small gap পার হতে না পারলে → বাড়াও
+   Line শেষ হলেও বেশি straight গেলে → কমাও
+   Range: 100–400 ms
+
+8. TURN_MIN_TIME = 100 ms
+   কাজ: Hard turn minimum কতক্ষণ rotate করবে।
+   Turn শুরু করেই PID-এ ফিরলে → বাড়াও
+   বেশি ঘুরে গেলে → কমাও
+   Range: 50–150 ms
+
+9. TURN_TIMEOUT = 300 ms
+   কাজ: Turn-এর maximum safety time।
+   Turn complete হওয়ার আগেই exit করলে → বাড়াও
+   বেশি সময় rotate করলে → কমাও
+   Range: 200–600 ms
+
+10. JUNCTION ACTIVE COUNT = 5
+    কাজ: কতগুলো sensor active হলে junction candidate।
+    Normal curve-কে junction ধরলে → বাড়াও (5→6)
+    Junction miss করলে → কমাও (5→4)
+
+11. TRACK DIFFERENCE = 150
+    DetectTrack()-এর:
+    abs(centerAvg - edgeAvg)
+
+    কাজ: B/W track change-এর confidence।
+    False B↔W switch হলে → বাড়াও
+    Reverse track detect না হলে → কমাও
+    Range: 100–300
+
+12. TRACK_SWITCH_TIME = 50 ms
+    কাজ: Track polarity change কতক্ষণ stable হলে accept করবে।
+    False switch হলে → বাড়াও
+    Reverse detect late হলে → কমাও
+    Range: 30–100 ms
+
+13. FINISH_CONFIRM_TIME = 500 ms
+    কাজ: Full-width line কতক্ষণ থাকলে FINISH।
+    Finish detect না হলে → কমাও
+    Cross-কে finish ধরলে → বাড়াও
+    Track/speed অনুযায়ী tune করতে হবে।
+    Range: ~100–500 ms
+
+14. SENSOR WEIGHTS
+    Current:
+    -350 -250 -150 -50 50 150 250 350
+
+    আপাতত CHANGE করো না।
+    PID-এর MAX_ERROR = 350 এর সাথে match করে.
 
 
-Turn protection:
+==============================
+        TUNING ORDER
+==============================
 
-TURN LEFT
-    ↓
-20ms forward
-    ↓
-rotate LEFT
-    ↓
-center এখনও line?
-    │
-   YES
-    ↓
-keep rotating
-    ↓
-center line ছেড়ে দিল
-    ↓
-turnCenterReleased = true
-    ↓
-keep rotating
-    ↓
-center আবার line পেল
-    ↓
-ResetPID()
-    ↓
-FOLLOW_LINE
-
-
-=========================
-
-Search:
-
-LINE LOST
+Calibration
    ↓
-GAP
+Sensor Threshold
    ↓
-preferred direction
-300ms
+Line Lost Threshold
    ↓
-not found
+Kp
    ↓
-opposite direction
-600ms
+Kd
    ↓
-not found
+Base Speed
    ↓
-STOP
+Hard Left / Right Detection
+   ↓
+Turn Min Time
+   ↓
+Turn Timeout
+   ↓
+Gap Timeout
+   ↓
+Junction Detection
+   ↓
+Track Difference
+   ↓
+Track Switch Time
+   ↓
+Finish Confirm Time
+   ↓
+Full Track Test
+
+
+IMPORTANT:
+
+একসাথে multiple value change করবে না।
+
+একটা value change
+→ Test
+→ Result দেখো
+→ তারপর next change।
+
+PID = normal line/curve control
+Hard Turn = sharp/90° turn
+Junction = intersection
+GAP/Search = line missing/recovery
+DetectTrack = Black↔White polarity
+Finish = race stop
+
+একটার problem অন্যটার tuning দিয়ে fix করার চেষ্টা করবে না।

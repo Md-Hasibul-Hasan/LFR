@@ -49,6 +49,7 @@ DashboardItem dashboard[] =
   {"Line Follow",ItemType::ACTION,nullptr,nullptr,Screen::LINE_FOLLOW},
 	{"Sensor View",ItemType::ACTION,nullptr,nullptr,Screen::SENSOR_VIEW},
 	{"Motor Test",ItemType::ACTION,nullptr,nullptr,Screen::MOTOR_TEST},
+	{"Set Timer",ItemType::ACTION,nullptr,nullptr,Screen::SET_TIMER},
 	{"kp",ItemType::FLOAT,&kp,nullptr,Screen::DASHBOARD},
 	{"ki",ItemType::FLOAT,&ki,nullptr,Screen::DASHBOARD},
 	{"Kd",ItemType::FLOAT,&kd,nullptr,Screen::DASHBOARD},
@@ -253,6 +254,5 @@ void HandleDashboard()
 		}
 	}
 }
-
 
 

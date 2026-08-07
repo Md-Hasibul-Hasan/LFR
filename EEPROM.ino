@@ -15,6 +15,16 @@ struct EEPROMData
 
     byte llrIdx;
 
+    unsigned long gapTimeout;
+    unsigned long turnMinTime;
+    unsigned long turnTimeout;
+    unsigned long finishConfirmTime;
+    unsigned long trackSwitchTime;
+
+    int sensorThreshold;
+    int lineLostThreshold;
+    int trackDiffThreshold;
+
     int minValue[SENSOR_COUNT];
     int maxValue[SENSOR_COUNT];
 };
@@ -36,6 +46,16 @@ void SaveSettings()
     data.baseSpeed = baseSpeed;
 
     data.llrIdx = llrIdx;
+
+    data.gapTimeout = GAP_TIMEOUT;
+    data.turnMinTime = TURN_MIN_TIME;
+    data.turnTimeout = TURN_TIMEOUT;
+    data.finishConfirmTime = FINISH_CONFIRM_TIME;
+    data.trackSwitchTime = TRACK_SWITCH_TIME;
+
+    data.sensorThreshold = SENSOR_THRESHOLD;
+    data.lineLostThreshold = LINE_LOST_THRESHOLD;
+    data.trackDiffThreshold = TRACK_DIFF_THRESHOLD;
 
     for (byte i = 0; i < SENSOR_COUNT; i++)
     {
@@ -70,6 +90,16 @@ void LoadSettings()
     baseSpeed = data.baseSpeed;
 
     llrIdx = data.llrIdx;
+
+    GAP_TIMEOUT = data.gapTimeout;
+    TURN_MIN_TIME = data.turnMinTime;
+    TURN_TIMEOUT = data.turnTimeout;
+    FINISH_CONFIRM_TIME = data.finishConfirmTime;
+    TRACK_SWITCH_TIME = data.trackSwitchTime;
+
+    SENSOR_THRESHOLD = data.sensorThreshold;
+    LINE_LOST_THRESHOLD = data.lineLostThreshold;
+    TRACK_DIFF_THRESHOLD = data.trackDiffThreshold;
 
     for (byte i = 0; i < SENSOR_COUNT; i++)
     {
